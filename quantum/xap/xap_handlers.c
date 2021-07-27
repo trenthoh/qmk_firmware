@@ -16,6 +16,7 @@
 
 #include <quantum.h>
 #include <xap.h>
+#include <info_json_gz.h>
 
 void xap_respond_failure(xap_token_t token, xap_response_flags_t response_flags) { xap_send(token, response_flags, NULL, 0); }
 
