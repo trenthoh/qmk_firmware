@@ -259,6 +259,10 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
             return 200;
         case TD(SUPSHF):
             return 200;
+        case RCTL_T(KC_DOWN):
+            return 200;
+        case RSFT_T(KC_UP):
+            return 200;
         default:
             return TAPPING_TERM;
     }
