@@ -1,4 +1,4 @@
-/* Copyright 2021 James Young (@noroadsleft)
+/* Copyright 2021 Trent Hoh
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,7 +15,6 @@
  */
 
 #include QMK_KEYBOARD_H
-
 
 enum ortho_4x12_layers {
     _SUQWER,
@@ -273,6 +272,8 @@ qk_tap_dance_action_t tap_dance_actions[] = {
 uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
     switch (keycode) {
         case TD(SUPSPC):
+            return 200;
+        case TD(SUPSHF):
             return 200;
         default:
             return TAPPING_TERM;
