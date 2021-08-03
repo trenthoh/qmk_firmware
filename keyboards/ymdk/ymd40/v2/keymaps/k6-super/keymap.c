@@ -203,6 +203,7 @@ void supspc_reset(qk_tap_dance_state_t *state, void *user_data) {
             unregister_code16(KC_SPC);
             break;
         case TD_DOUBLE_HOLD:
+            layer_off(_SUPKEY);
             break;
         case TD_DOUBLE_SINGLE_TAP:
             unregister_code16(KC_SPC);
