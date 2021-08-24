@@ -24,6 +24,11 @@ enum ortho_4x6_layers {
     L_FN
 };
 
+enum td_keycodes {
+    SPCPOI,
+    BSPSYM
+};
+
 typedef enum {
     TD_NONE,
     TD_UNKNOWN,
@@ -38,12 +43,21 @@ static td_state_t td_state;
 
 td_state_t cur_dance(qk_tap_dance_state_t *state);
 
+#define MODNUM MO(L_NUM)
+#define MODNAV MO(L_NAV)
+#define TOFUN TO(L_FN)
+#define OFFFUN TG(L_FN)
+#define QCKLF LCTL(KC_LEFT)
+#define QCKRT LCTL(KC_RGHT)
+#define TDBSSY TD(BSPSYM)
+#define TDSPPO TD(SPCPOI)
+
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [L_QWE] = LAYOUT_ortho_4x6_left(
       KC_TAB,    KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,
-      LT(2,KC_BSPC),KC_A, KC_S,    KC_D,    KC_F,    KC_G,
+      TDBSSY,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,
       KC_LSFT,   KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,
-      KC_LCTL,   MO(4),   KC_LGUI, KC_LALT, MO(3),   LT(1,KC_SPC)
+      KC_LCTL,   MODNAV,  KC_LGUI, KC_LALT, MODNUM,  TDSPPO
     ),
     [L_POI] = LAYOUT_ortho_4x6_left(
       KC_ESC,    KC_P,    KC_O,    KC_I,    KC_U,    KC_Y,
@@ -59,20 +73,156 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     ),
     [L_NUM] = LAYOUT_ortho_4x6_left(
       KC_1,      KC_2,    KC_3,    KC_4,    KC_5,    KC_6,
-      KC_7,      KC_8,    KC_9,    KC_0,    KC_MINS, KC_EQL,
+      KC_EQL,    KC_MINS, KC_0,    KC_9,    KC_8,    KC_7,      
       KC_TRNS,   KC_TILD, KC_LPRN, KC_RPRN, KC_UNDS, KC_PLUS,
       KC_TRNS,   KC_GRV,  KC_TRNS, KC_TRNS, KC_TRNS, KC_NO
     ),
     [L_NAV] = LAYOUT_ortho_4x6_left(
-      KC_INS,    KC_NO,   KC_PSCR, LCTL(KC_LEFT),   KC_UP,   LCTL(KC_RGHT),
+      KC_INS,    KC_NO,   KC_PSCR, QCKLF,   KC_UP,   QCKRT,
       KC_DEL,    KC_NO,   KC_SLCK, KC_LEFT, KC_DOWN, KC_RGHT,
-      KC_TRNS,   TT(5),   KC_PAUS, KC_HOME, KC_PGUP, KC_END,
+      KC_TRNS,   TOFUN,   KC_PAUS, KC_HOME, KC_PGUP, KC_END,
       KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_PGDN, KC_LSFT
     ),
     [L_FN] = LAYOUT_ortho_4x6_left(
       KC_F1,     KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,
       KC_F7,     KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,
-      KC_TRNS,   KC_TRNS, KC_NO,   KC_NO,   KC_NO,   KC_NO,
+      KC_TRNS,   OFFFUN,  KC_NO,   KC_NO,   KC_NO,   KC_NO,
       KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_NO,   BL_TOGG
     )
 };
+
+td_state_t cur_dance(qk_tap_dance_state_t *state) {
+    switch(state->count){
+        case 1:
+            if((state->interrupted && !state->pressed) || !state->pressed) return TD_SINGLE_TAP;
+            else return TD_SINGLE_HOLD;
+        case 2:
+            if (state->interrupted && !state->pressed) return TD_DOUBLE_SINGLE_TAP;
+            else if ((state->interrupted && state->pressed) || state->pressed) return TD_DOUBLE_HOLD;
+            else return TD_DOUBLE_TAP;
+        default:
+            return TD_UNKNOWN;
+    }
+}
+
+void spcpoi_finished(qk_tap_dance_state_t *state, void *user_data) {
+    td_state = cur_dance(state);
+    switch (td_state) {
+        case TD_NONE:
+            break;
+        case TD_UNKNOWN:
+            break;
+        case TD_SINGLE_TAP:
+            register_code16(KC_SPC);
+            break;
+        case TD_SINGLE_HOLD:
+            layer_on(L_POI);
+            break;
+        case TD_DOUBLE_TAP:
+            tap_code16(KC_SPC);
+            register_code16(KC_SPC);
+            break;
+        case TD_DOUBLE_HOLD:
+            tap_code16(KC_SPC);
+            layer_on(L_POI);
+            break;
+        case TD_DOUBLE_SINGLE_TAP:
+            tap_code16(KC_SPC);
+            register_code16(KC_SPC);
+            break;
+
+    }
+}
+
+void spcpoi_reset(qk_tap_dance_state_t *state, void *user_data) {
+    switch (td_state) {
+        case TD_NONE:
+            break;
+        case TD_UNKNOWN:
+            break;
+        case TD_SINGLE_TAP:
+            unregister_code16(KC_SPC);
+            break;
+        case TD_SINGLE_HOLD:
+            layer_off(L_POI);
+            break;
+        case TD_DOUBLE_TAP:
+            unregister_code16(KC_SPC);
+            break;
+        case TD_DOUBLE_HOLD:
+            layer_off(L_POI);
+            break;
+        case TD_DOUBLE_SINGLE_TAP:
+            unregister_code16(KC_SPC);
+            break;
+    }
+}
+
+void bspsym_finished(qk_tap_dance_state_t *state, void *user_data) {
+    td_state = cur_dance(state);
+    switch (td_state) {
+        case TD_NONE:
+            break;
+        case TD_UNKNOWN:
+            break;
+        case TD_SINGLE_TAP:
+            register_code16(KC_BSPC);
+            break;
+        case TD_SINGLE_HOLD:
+            layer_on(L_SYM);
+            break;
+        case TD_DOUBLE_TAP:
+            tap_code16(KC_BSPC);
+            register_code16(KC_BSPC);
+            break;
+        case TD_DOUBLE_HOLD:
+            tap_code16(KC_BSPC);
+            layer_on(L_SYM);
+            break;
+        case TD_DOUBLE_SINGLE_TAP:
+            tap_code16(KC_BSPC);
+            register_code16(KC_BSPC);
+            break;
+
+    }
+}
+
+void bspsym_reset(qk_tap_dance_state_t *state, void *user_data) {
+    switch (td_state) {
+        case TD_NONE:
+            break;
+        case TD_UNKNOWN:
+            break;
+        case TD_SINGLE_TAP:
+            unregister_code16(KC_BSPC);
+            break;
+        case TD_SINGLE_HOLD:
+            layer_off(L_SYM);
+            break;
+        case TD_DOUBLE_TAP:
+            unregister_code16(KC_BSPC);
+            break;
+        case TD_DOUBLE_HOLD:
+            layer_off(L_SYM);
+            break;
+        case TD_DOUBLE_SINGLE_TAP:
+            unregister_code16(KC_BSPC);
+            break;
+    }
+}
+
+qk_tap_dance_action_t tap_dance_actions[] = {
+    [SPCPOI] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, spcpoi_finished, spcpoi_reset),
+    [BSPSYM] = ACTION_TAP_DANCE_FN_ADVANCED(NULL, bspsym_finished, bspsym_reset)
+};
+
+uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
+    switch (keycode) {
+        case TD(SPCPOI):
+            return 200;
+        case TD(BSPSYM):
+            return 200;
+        default:
+            return TAPPING_TERM;
+    }
+}
