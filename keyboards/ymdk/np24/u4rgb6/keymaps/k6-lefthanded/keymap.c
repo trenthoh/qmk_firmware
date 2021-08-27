@@ -49,13 +49,14 @@ td_state_t cur_dance(qk_tap_dance_state_t *state);
 #define OFFFUN TG(L_FN)
 #define QCKLF LCTL(KC_LEFT)
 #define QCKRT LCTL(KC_RGHT)
+#define LTBKSY LT(L_SYM,KC_BSPC)
 #define TDBSSY TD(BSPSYM)
 #define TDSPPO TD(SPCPOI)
 
 const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [L_QWE] = LAYOUT_ortho_4x6_left(
       KC_TAB,    KC_Q,    KC_W,    KC_E,    KC_R,    KC_T,
-      TDBSSY,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,
+      LTBKSY,    KC_A,    KC_S,    KC_D,    KC_F,    KC_G,
       KC_LSFT,   KC_Z,    KC_X,    KC_C,    KC_V,    KC_B,
       KC_LCTL,   MODNAV,  KC_LGUI, KC_LALT, MODNUM,  TDSPPO
     ),
@@ -78,7 +79,7 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
       KC_TRNS,   KC_GRV,  KC_TRNS, KC_TRNS, KC_TRNS, KC_NO
     ),
     [L_NAV] = LAYOUT_ortho_4x6_left(
-      KC_INS,    KC_NO,   KC_PSCR, QCKLF,   KC_UP,   QCKRT,
+      KC_INS,    KC_CAPS, KC_PSCR, QCKLF,   KC_UP,   QCKRT,
       KC_DEL,    KC_NO,   KC_SLCK, KC_LEFT, KC_DOWN, KC_RGHT,
       KC_TRNS,   TOFUN,   KC_PAUS, KC_HOME, KC_PGUP, KC_END,
       KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_PGDN, KC_LSFT
@@ -86,8 +87,8 @@ const uint16_t PROGMEM keymaps[][MATRIX_ROWS][MATRIX_COLS] = {
     [L_FN] = LAYOUT_ortho_4x6_left(
       KC_F1,     KC_F2,   KC_F3,   KC_F4,   KC_F5,   KC_F6,
       KC_F7,     KC_F8,   KC_F9,   KC_F10,  KC_F11,  KC_F12,
-      KC_TRNS,   OFFFUN,  KC_NO,   KC_NO,   KC_NO,   KC_NO,
-      KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, KC_NO,   BL_TOGG
+      KC_TRNS,   OFFFUN,  RGB_TOG, RGB_MOD, RGB_SAI, RGB_HUI,
+      KC_TRNS,   KC_TRNS, KC_TRNS, KC_TRNS, RGB_SAD, BL_TOGG
     )
 };
 
@@ -225,4 +226,33 @@ uint16_t get_tapping_term(uint16_t keycode, keyrecord_t *record) {
         default:
             return TAPPING_TERM;
     }
+}
+
+void keyboard_pre_init_user(void) {
+  // Call the keyboard pre init code.
+
+  // Set our LED pins as output
+  setPinOutput(C6);
+  backlight_set(255);
+  writePinLow(C6);
+}
+
+bool process_record_user(uint16_t keycode, keyrecord_t *record) {
+  switch (keycode) {
+    case BL_TOGG:
+      if (record->event.pressed) {
+        if(is_backlight_enabled()) {
+            writePinHigh(C6);
+        } else {
+            writePinLow(C6);
+            backlight_level(255);
+            return false;
+        }
+      } else {
+        // Do something else when release
+      }
+      return true; // Skip all further processing of this key
+    default:
+      return true; // Process all other keycodes normally
+  }
 }
