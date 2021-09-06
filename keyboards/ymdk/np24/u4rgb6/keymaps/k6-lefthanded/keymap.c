@@ -233,7 +233,7 @@ void keyboard_pre_init_user(void) {
 
   // Set our LED pins as output
   setPinOutput(C6);
-  backlight_set(255);
+  backlight_level(255);
   writePinLow(C6);
 }
 
